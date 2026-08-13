@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -60,8 +61,13 @@ public class OutboundService {
                 .build();
         OutboundOrder savedOrder = outboundOrderRepository.saveAndFlush(order);
 
-        // 4. 遍历明细：原子扣减库存 + 保存明细
-        for (OutboundOrderCreateRequest.OutboundItemRequest item : request.getItems()) {
+        // 4. 按 productId + locationCode 排序后扣减库存（防止多订单并发死锁）
+        List<OutboundOrderCreateRequest.OutboundItemRequest> sortedItems = request.getItems().stream()
+                .sorted(Comparator.comparing(OutboundOrderCreateRequest.OutboundItemRequest::getProductId)
+                        .thenComparing(OutboundOrderCreateRequest.OutboundItemRequest::getLocationCode))
+                .collect(Collectors.toList());
+
+        for (OutboundOrderCreateRequest.OutboundItemRequest item : sortedItems) {
             // 原子扣减：UPDATE ... WHERE quantity >= :qty
             // 返回0表示库存不足或记录不存在，由数据库保证不超卖
             int rows = inventoryRepository.deductIfSufficient(
