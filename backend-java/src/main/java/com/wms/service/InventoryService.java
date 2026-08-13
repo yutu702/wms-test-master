@@ -10,6 +10,7 @@ import com.wms.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -167,11 +168,13 @@ public class InventoryService {
     }
 
     /**
-     * 库存查询 — 任务2实现
+     * 库存查询 — 任务2
+     * 支持按商品名称/SKU模糊搜索、按仓库筛选、按库位编码筛选、分页
      */
-    public List<InventoryResponse> queryInventory(String keyword, Long warehouseId,
-                                                   int page, int pageSize) {
-        // TODO: 任务2实现
-        throw new UnsupportedOperationException("请实现库存查询功能（任务2）");
+    @Transactional(readOnly = true)
+    public Page<InventoryResponse> queryInventory(String keyword, Long warehouseId,
+                                                   String locationCode, int page, int pageSize) {
+        Pageable pageable = PageRequest.of(page - 1, pageSize, Sort.by(Sort.Direction.DESC, "updatedAt"));
+        return inventoryRepository.queryInventory(keyword, warehouseId, locationCode, pageable);
     }
 }

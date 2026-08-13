@@ -61,14 +61,22 @@ public class InventoryController {
 
     /**
      * 库存查询 — 任务2
+     * 支持按商品名称/SKU关键字、仓库、库位编码筛选
      */
     @GetMapping("/inventory")
-    public ApiResponse<List<InventoryResponse>> queryInventory(
+    public ApiResponse<PageResult<InventoryResponse>> queryInventory(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Long warehouseId,
+            @RequestParam(required = false) String locationCode,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int pageSize) {
-        // TODO: 任务2实现
-        return ApiResponse.error(501, "请实现库存查询功能（任务2）");
+        Page<InventoryResponse> result = inventoryService.queryInventory(keyword, warehouseId, locationCode, page, pageSize);
+        PageResult<InventoryResponse> pageResult = new PageResult<>(
+                result.getContent(),
+                result.getTotalElements(),
+                page,
+                pageSize
+        );
+        return ApiResponse.success(pageResult);
     }
 }

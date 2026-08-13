@@ -10,9 +10,15 @@ import java.time.LocalDateTime;
  * 候选人需要实现库存查询功能
  */
 @Entity
-@Table(name = "inventory", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"product_id", "location_code"})
-})
+@Table(name = "inventory",
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"product_id", "location_code"})
+    },
+    indexes = {
+        @Index(name = "idx_inventory_product_id", columnList = "product_id"),
+        @Index(name = "idx_inventory_location_code", columnList = "location_code")
+    }
+)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
