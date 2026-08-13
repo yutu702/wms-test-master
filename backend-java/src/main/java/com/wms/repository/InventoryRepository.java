@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -21,12 +22,25 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
     // 检查商品是否有关联库存
     boolean existsByProductId(Long productId);
 
-    // 悲观锁查询：用于入库/出库时锁定库存行，防止并发问题
+    // 悲观锁查询：用于入库时锁定库存行，防止并发问题
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT i FROM Inventory i WHERE i.productId = :productId AND i.locationCode = :locationCode")
     Optional<Inventory> findByProductIdAndLocationCodeForUpdate(
             @Param("productId") Long productId,
             @Param("locationCode") String locationCode);
+
+    /**
+     * 原子扣减库存（出库专用）
+     * 通过 UPDATE ... WHERE quantity >= :qty 保证不超卖
+     * 返回受影响行数：1=成功，0=库存不足或记录不存在
+     */
+    @Modifying
+    @Query("UPDATE Inventory i SET i.quantity = i.quantity - :qty, i.updatedAt = CURRENT_TIMESTAMP " +
+           "WHERE i.productId = :productId AND i.locationCode = :locationCode AND i.quantity >= :qty")
+    int deductIfSufficient(
+            @Param("productId") Long productId,
+            @Param("locationCode") String locationCode,
+            @Param("qty") int qty);
 
     // 库存查询：JOIN 关联 Product/Location/Warehouse，避免 N+1
     // 支持关键字（商品名称/SKU）、仓库、库位编码筛选
