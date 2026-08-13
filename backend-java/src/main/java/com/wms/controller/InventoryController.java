@@ -40,6 +40,7 @@ public class InventoryController {
     public ApiResponse<PageResult<InboundOrderResponse>> getInboundOrders(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int pageSize) {
+        pageSize = Math.min(pageSize, 100);
         Page<InboundOrderResponse> result = inventoryService.getInboundOrders(page, pageSize);
         PageResult<InboundOrderResponse> pageResult = new PageResult<>(
                 result.getContent(),
@@ -70,6 +71,7 @@ public class InventoryController {
             @RequestParam(required = false) String locationCode,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int pageSize) {
+        pageSize = Math.min(pageSize, 100);
         Page<InventoryResponse> result = inventoryService.queryInventory(keyword, warehouseId, locationCode, page, pageSize);
         PageResult<InventoryResponse> pageResult = new PageResult<>(
                 result.getContent(),
