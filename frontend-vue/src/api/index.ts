@@ -73,7 +73,7 @@ export const getInventory = (params: {
   )
 
 
-// ============ 入库单（候选人实现） ============
+// ============ 入库单 ============
 
 export interface InboundItemRequest {
   productId: number
@@ -81,8 +81,33 @@ export interface InboundItemRequest {
   locationCode: string
 }
 
+export interface InboundOrderItem {
+  productId: number
+  productName: string
+  quantity: number
+  locationCode: string
+}
+
+export interface InboundOrder {
+  id: number
+  orderNo: string
+  supplierName: string
+  status: string
+  items: InboundOrderItem[]
+  createdAt: string
+}
+
 export const createInboundOrder = (data: {
   supplierName: string
   items: InboundItemRequest[]
 }) =>
-  api.post('/inbound-orders', data)
+  api.post<any, { code: number; message: string; data: InboundOrder }>('/inbound-orders', data)
+
+export const getInboundOrders = (params?: { page?: number; pageSize?: number }) =>
+  api.get<any, { code: number; data: { list: InboundOrder[]; total: number; page: number; pageSize: number } }>(
+    '/inbound-orders',
+    { params }
+  )
+
+export const getInboundOrder = (id: number) =>
+  api.get<any, { code: number; data: InboundOrder }>(`/inbound-orders/${id}`)
