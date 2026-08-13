@@ -18,6 +18,9 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
 
     Optional<Inventory> findByProductIdAndLocationCode(Long productId, String locationCode);
 
+    // 检查商品是否有关联库存
+    boolean existsByProductId(Long productId);
+
     // 悲观锁查询：用于入库/出库时锁定库存行，防止并发问题
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT i FROM Inventory i WHERE i.productId = :productId AND i.locationCode = :locationCode")
